@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script type="text/javascript">
+    // 체크된거 색변경
+    var checkedCount = 0; // 체크된박스 숫자
+    var checkedList = []; // 체크된 영상명
+    var videoNum = 0;
+    var pageNum = 1;
+    let nowPage = 0; // 동영상 목록 현재 페이지(숫자는 0으로 지정하고 너네가 출력할 때는 +1 해서 화면 출력하면 될 듯)
+    var page10Unit= 0; // 10페이지 단위
+
+    $(document).ready(function () {
+      if(videoNum % 10 == 0){
+        pageNum = parseInt(videoNum / 10);
+      }
+      else{
+        pageNum = parseInt(videoNum / 10) + 1;
+      }
+      getVideoAmount();
+      getVideoList();
+    });
+
+    function liIntroduce() {
+      $("#introduce").css("display", "block");
+      $("#cctvSelectTable").css("display", "none");
+      $("#videoDiv").css("display","none")
+    }
+
+    function liCctvSelectTable() {
+      $("#introduce").css("display", "none");
+      $("#cctvSelectTable").css("display", "block");
+      $("#videoDiv").css("display","none")
+    }
+
+    function loadVideo(){
+      if(checkedCount == 0){
+        alert("동영상 최대개수 초과(최대: 4개)");
+      }
+      else{
+        let obj = {
+          name: checkedList,
+          cnt: checkedCount
+        };
+        let js = JSON.stringify(obj);
+        $.ajax({
+          type: "POST",
+          url: "/loadVideo",
+          contentType: 'application/json; charset=utf-8',
+          data: js,
+          dataType: 'json',
+          success: function(data) {
+            for(let i = 0; i < checkedCount; i++) {
+              $("#label" + (i + 1)).text(data[i].date + " / " + data[i].name);
+              $("#video" + (i + 1)).attr("src", data[i].path);
+            }
+            checkedList.splice(0, checkedCount);
+            checkedCount = 0;
+            $("#introduce").css("display", "none");
+            $("#cctvSelectTable").css("display", "none");
+            $("#videoDiv").css("display","block")
+          }
+        });
+      }
+    }
+
+    function checkCountColor(index) {
+      var chkbox = $("#nameList"+index).text();
+      if(chkbox==""){
+       $("#chk"+index).prop("checked",false)
+       return;
+      }
+      for (i = 0; i < checkedCount; i++) {
+        if (checkedList[i] == chkbox) {
+          checkedList.splice(i, 1);
+          checkedCount--;
+          $("#tr"+index).css('backgroundColor','white');
+          return;
+        }
+      }
+      if(checkedCount == 4) {
+        alert("동영상 최대개수 초과(최대: 4개)");
+        return;
+      }
+      checkedList.push(chkbox);
+      checkedCount++;
+      $("#tr"+index).css('backgroundColor','lightgray');
+    }
+
+
+    function getVideoAmount() {
+      $.ajax({
+        type: "GET",
+        url: "/getVideoAmount",
+        success: function (data) {
+          videoNum = data.amount;
+          pageNum = (videoNum / 10) + 1;
+        }
+      });
+    }
+
+    function getVideoList(index) {
+      nowPage = page10Unit*10 + index - 1;
+      $.ajax({
+        type: "GET",
+        url: "/getVideoList/" + nowPage,
+        success: function (data) {
+          if (data[0].result == true) {
+            let len = data[0].length;
+            for (let i = 1; i <= len; i++) {
+              document.getElementById("dateList" + i).innerHTML = data[i].date;
+              document.getElementById("nameList" + i).innerHTML = data[i].name;
+            }
+          } else return;
+        }
+      });
+    }
+
+    function pagePrev(){
+      if(page10Unit > 0){
+        page10Unit--;
+        for(let i = 1; i <= 10; i++){
+          if(((page10Unit * 10) + i) <= pageNum ){
+            $("#page"+i).text(page10Unit*10 + i);
+            nowPage = page10Unit*10 + i - 1;
+          }
+          else{
+            $("#page"+i).text("");
+          }
+        }
+      }
+    }
+
+    function pageNext(){
+      if((page10Unit+1)*10 < pageNum){
+        page10Unit++;
+        for(let i = 1; i <= 10; i++){
+          if(((page10Unit * 10) + i) <= pageNum ){
+            $("#page"+i).text(page10Unit*10 + i);
+            nowPage = page10Unit*10 + i - 1;
+          }
+          else{
+            $("#page"+i).text("");
+          }
+        }
+      }
+    }
+
+  </script>
+
+
+<title>CROFO</title>
+<link rel="stylesheet" href="./style/main_style.css">
+</head>
+
+<body>
+  <header>
+    <h1>
+      &emsp; &emsp; &emsp; &emsp; &emsp;
+      CROFO TEST WEB PAGE
+    </h1>
+  </header>
+  <img src="./images/crofo_logo.png" class="absolute" alt="CROFO LOGO" style="width:200px;height:100px;">
+
+  <nav>
+    <ul class="nav-container">
+      <li class="nav-item" onclick="liIntroduce()"> <a href="#">CROFO 소개</a></li>
+      <li class="nav-item" onclick="liCctvSelectTable()"> <a href="#">CCTV SAMPLE</a></li>
+    </ul>
+  </nav>
+  <div id="introduce">
+    <h1>CROFO란?</h1>
+    <p>CROFO는 Cross와 Infomation를 합성하여 만든 단어로, 교차로에서 운전자가 보기 어려운 사각지대의 정보를 운전자에게 앱으로 제공함으로서 사고를 예방하기 위해 만들어졌다.</p>
+  </div>
+
+  <div id="cctvdiv"> 
+    <table id="cctvSelectTable">
+      <colgroup>
+        <col width="25px;" />
+        <col width="100px" />
+        <col width="600px;" />
+      </colgroup>
+      <th></th>
+      <th>날짜</th>
+      <th>CCTV영상명</th>
+      <tr id = "tr1">
+        <td><input type='checkbox' id="chk1" onclick="checkCountColor(1)" /></td>
+        <td id="dateList1"></td>
+        <td id="nameList1"></td>
+      </tr>
+      <tr id = "tr2">
+        <td><input type='checkbox' id="chk2" onclick="checkCountColor(2)" /></td>
+        <td id="dateList2"></td>
+        <td id="nameList2"></td>
+      </tr>
+      <tr id = "tr3">
+        <td><input type='checkbox' id="chk3" onclick="checkCountColor(3)" /></td>
+        <td id="dateList3"></td>
+        <td id="nameList3"></td>
+      </tr>
+      <tr id = "tr4">
+        <td><input type='checkbox' id="chk4" onclick="checkCountColor(4)" /></td>
+        <td id="dateList4"></td>
+        <td id="nameList4"></td>
+      </tr>
+      <tr id = "tr5">
+        <td><input type='checkbox' id="chk5" onclick="checkCountColor(5)" /></td>
+        <td id="dateList5"></td>
+        <td id="nameList5"></td>
+      </tr>
+      <tr id = "tr6">
+        <td><input type='checkbox' id="chk6" onclick="checkCountColor(6)" /></td>
+        <td id="dateList6"></td>
+        <td id="nameList6"></td>
+      </tr>
+      <tr id = "tr7">
+        <td><input type='checkbox' id="chk7" onclick="checkCountColor(7)" /></td>
+        <td id="dateList7"></td>
+        <td id="nameList7"></td>
+      </tr>
+      <tr id = "tr8">
+        <td><input type='checkbox' id="chk8" onclick="checkCountColor(8)" /></td>
+        <td id="dateList8"></td>
+        <td id="nameList8"></td>
+      </tr>
+      <tr id = "tr9">
+        <td><input type='checkbox' id="chk9" onclick="checkCountColor(9)" /></td>
+        <td id="dateList9"></td>
+        <td id="nameList9"></td>
+      </tr>
+      <tr id = "tr10">
+        <td><input type='checkbox' id="chk10" onclick="checkCountColor(10)" /></td>
+        <td id="dateList10"></td>
+        <td id="nameList10"></td>
+      </tr>
+  
+      <tr>
+        <td class="elseTd" colspan="3">
+          <input type="button" value="load" onclick="loadVideo()"/>
+        </td>
+      </tr>
+  
+      <tr>
+        <td class="elseTd" colspan="3">
+          <ul class="pageNum">
+            <li><a href="#" style="margin-left:200px;" onclick="pagePrev()">◀</a></li>
+            <li><a id="page1" class="numBox" onclick="getVideoList(1)">1</a></li>
+            <li><a id="page2" class="numBox" onclick="getVideoList(2)">2</a></li>
+            <li><a id="page3" class="numBox" onclick="getVideoList(3)">3</a></li>
+            <li><a id="page4" class="numBox" onclick="getVideoList(4)">4</a></li>
+            <li><a id="page5" class="numBox" onclick="getVideoList(5)">5</a></li>
+            <li><a id="page6" class="numBox" onclick="getVideoList(6)">6</a></li>
+            <li><a id="page7" class="numBox" onclick="getVideoList(7)">7</a></li>
+            <li><a id="page8" class="numBox" onclick="getVideoList(8)">8</a></li>
+            <li><a id="page9" class="numBox" onclick="getVideoList(9)">9</a></li>
+            <li><a id="page10" class="numBox" onclick="getVideoList(10)">10</a></li>
+            <li><a href="#" onclick="pageNext()">▶</a></li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div id="videoDiv">
+    <div>
+      <div id = "label1" class='label'></div>
+      <div id = "label2" class='label'></div>
+      <div>
+        <video id= "video1" src='./testvideo.mp4' width="350" height='350' autoplay></video>
+        <video id= "video2" src='./testvideo.mp4' width="350" height='350' autoplay></video>
+      </div>
+    </div>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    </br>
+    <div>
+      <div id = "label3" class='label'></div>
+      <div id = "label4" class='label'></div>
+      <div>
+        <video id= "video3" src='./testvideo.mp4' width="350" height='350' autoplay></video>
+        <video id= "video4" src='./testvideo.mp4' width="350" height='350' autoplay></video>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
