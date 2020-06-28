@@ -57,7 +57,6 @@ def main(yolo, args):
         raw_fps = int(video_capture.get(cv2.CAP_PROP_FPS))
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         out = cv2.VideoWriter('output.avi', fourcc, raw_fps, (int(w * scale), int(h * scale)))
-        list_file = open('detection.txt', 'w')
         frame_index = -1
 
     fps = 0.0

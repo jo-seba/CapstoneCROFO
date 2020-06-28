@@ -33,7 +33,7 @@ class CrosswalkMask:
                 x1, y1 = np.min(roi, axis=0)
                 x2, y2 = np.max(roi, axis=0)
                 result.append([x1, y1, x2, y2])
-            return reulst
+            return result
         else:
             roi = self.result['rois'][index]
             x1, y1 = np.min(roi, axis=0)
