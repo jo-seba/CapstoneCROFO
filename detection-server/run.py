@@ -21,7 +21,7 @@ from datetime import datetime
 
 from shapely.geometry import Point, Polygon
 
-from crosswalkMask import CrosswalkMask
+from crosswalk_mask import CrosswalkMask
 from mrcnn import visualize
 
 
@@ -301,7 +301,6 @@ class Daemon:
                     continue
 
 
-
                 if cw_item['id'] not in self.crosswalks.keys():
                     self.crosswalks[cw_item['id']] = deepcopy(cw_item)
                     logger.info('Crosswalk Registered! - %s'%(cw_item['id']))
@@ -314,20 +313,5 @@ class Daemon:
                     else:
                         logger.info('Crosswalk Refresh Rejected! - %s (Old: %d, New: %d)' % (cw_item['id'], oldArea, newArea))
 
-
-
-
 daemon = Daemon()
 daemon.start()
-
-
-
-
-
-
-
-
-
-
-
-

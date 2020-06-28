@@ -309,12 +309,9 @@ class Daemon:
                         cw_item['cordis'] = deepcopy(info['cordis'][id_][0])
                         break
 
-
                 if cw_item['id'] is None:
                     self.unmatched_crosswalks.append(cw_item)
                     continue
-
-
 
                 if cw_item['id'] not in self.crosswalks.keys():
                     self.crosswalks[cw_item['id']] = deepcopy(cw_item)
@@ -328,20 +325,5 @@ class Daemon:
                     else:
                         logger.info('Crosswalk Refresh Rejected! - %s (Old: %d, New: %d)' % (cw_item['id'], oldArea, newArea))
 
-
-
-
 daemon = Daemon()
 daemon.start()
-
-
-
-
-
-
-
-
-
-
-
-
