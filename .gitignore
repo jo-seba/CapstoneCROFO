@@ -1,0 +1,10 @@
+# node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Editor
+.DS_Store
+
+# sql
+*.sql

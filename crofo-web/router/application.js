@@ -1,18 +1,7 @@
 let express = require('express');
 let router = express.Router();
-let mysql = require('mysql');
 
-const HOST = 'bic4907.diskstation.me'
-const MYSQLID = 'capstone';
-const MYSQLPW = 'capstone2020';
-const DBNAME = 'capstone';
-
-let conn = mysql.createConnection({
-    host: HOST,
-    user: MYSQLID,
-    password: MYSQLPW,
-    database: DBNAME
-});    
+let readConn = require('../util/db').readConn;
 
 // 운전자가 사용하는 어플리케이션에 3km 이내에 있는 교차로들 목록을 보내줌.
 router.post('/cross/find', function (request, response) { 
@@ -22,51 +11,52 @@ router.post('/cross/find', function (request, response) {
     let arr = []; // 교차로 정보들을 저장할 배열
 
     let sql = 'select * from intersection';
-    conn.query(sql, function(error, results) {
+    readConn.query(sql, function(error, results) {
         if (error) {
             console.log(error);
-        } else {
-            let len = results.length; // DB에 있는 교차로 갯수
-            if (len == 0) { // 교차로가 없으면
-                response.json({
-                    result: false // false를 반환
-                });
-            } else { // 교차로가 있다면
-                for (let i = 0; i < len; i++) { // 갯수만큼 반복문
-                    let distance = getDistance(lat, lon, results[i].cent_x, results[i].cent_y); // 운전자 차량위치와 교차로와의 거리 계산
-                    if (distance < 3000) { // 3km 이내라면
-                        let obj = {
-                            id: results[i].id, // 교차로 id
-                            cent_x: results[i].cent_x, // 교차로 중앙좌표 lat
-                            cent_y: results[i].cent_y, // 교차로 중앙좌표 lon
-                            loc_x0: results[i].loc_x0, // 교차로 북동쪽 상단 lat
-                            loc_y0: results[i].loc_y0, // 교차로 북동쪽 상단 lon
-                            loc_x1: results[i].loc_x1, // 교차로 북서쪽 상단 lat
-                            loc_y1: results[i].loc_y1, // 교차로 북서쪽 상단 lon
-                            loc_x2: results[i].loc_x2, // 교차로 남서쪽 하단 lat
-                            loc_y2: results[i].loc_y2, // 교차로 남서쪽 하단 lon
-                            loc_x3: results[i].loc_x3, // 교차로 남동쪽 하단 lat
-                            loc_y3: results[i].loc_y3, // 교차로 남동쪽 하단 lon
-                            cen_x0: results[i].cen_x0, // 교차로 북쪽 중앙 lat
-                            cen_x1: results[i].cen_x1, // 교차로 북쪽 중앙 lon
-                            cen_x2: results[i].cen_x2, // 교차로 동쪽 중앙 lat
-                            cen_x3: results[i].cen_x3, // 교차로 동쪽 중앙 lon
-                            cen_y0: results[i].cen_y0, // 교차로 남쪽 중앙 lat
-                            cen_y1: results[i].cen_y1, // 교차로 남쪽 중앙 lon
-                            cen_y2: results[i].cen_y2, // 교차로 서쪽 중앙 lat
-                            cen_y3: results[i].cen_y3 // 교차로 서쪽 중앙 lon
-                        };
-                        arr.push(obj);
-                    }
-                    if (i + 1 == len) { // json형식으로 response 보냄
-                        response.json({
-                            arr: arr,
-                            result: true
-                        });
-                    }
-                }
+            return response.status(500).json({
+                code: 0,
+                error
+            });
+        }
+        let len = results.length; // DB에 있는 교차로 갯수
+        if (len === 0) { // 교차로가 없으면
+            return response.status(400).json({
+                code: 2,
+                error: 'There is no intersection in database'
+            });
+        } 
+        for (let i = 0; i < len; i++) { // 갯수만큼 반복문
+            let distance = getDistance(lat, lon, results[i].cent_x, results[i].cent_y); // 운전자 차량위치와 교차로와의 거리 계산
+            if (distance < 3000) { // 3km 이내라면
+                let obj = {
+                    id: results[i].id, // 교차로 id
+                    cent_x: results[i].cent_x, // 교차로 중앙좌표 lat
+                    cent_y: results[i].cent_y, // 교차로 중앙좌표 lon
+                    loc_x0: results[i].loc_x0, // 교차로 북동쪽 상단 lat
+                    loc_y0: results[i].loc_y0, // 교차로 북동쪽 상단 lon
+                    loc_x1: results[i].loc_x1, // 교차로 북서쪽 상단 lat
+                    loc_y1: results[i].loc_y1, // 교차로 북서쪽 상단 lon
+                    loc_x2: results[i].loc_x2, // 교차로 남서쪽 하단 lat
+                    loc_y2: results[i].loc_y2, // 교차로 남서쪽 하단 lon
+                    loc_x3: results[i].loc_x3, // 교차로 남동쪽 하단 lat
+                    loc_y3: results[i].loc_y3, // 교차로 남동쪽 하단 lon
+                    cen_x0: results[i].cen_x0, // 교차로 북쪽 중앙 lat
+                    cen_x1: results[i].cen_x1, // 교차로 북쪽 중앙 lon
+                    cen_x2: results[i].cen_x2, // 교차로 동쪽 중앙 lat
+                    cen_x3: results[i].cen_x3, // 교차로 동쪽 중앙 lon
+                    cen_y0: results[i].cen_y0, // 교차로 남쪽 중앙 lat
+                    cen_y1: results[i].cen_y1, // 교차로 남쪽 중앙 lon
+                    cen_y2: results[i].cen_y2, // 교차로 서쪽 중앙 lat
+                    cen_y3: results[i].cen_y3 // 교차로 서쪽 중앙 lon
+                };
+                arr.push(obj);
             }
         }
+        response.status(200).json({
+            arr,
+            code: 1
+        });
     });
 });
 

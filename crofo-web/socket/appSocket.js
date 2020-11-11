@@ -1,20 +1,8 @@
 module.exports = function (server) {
     let socketio = require('socket.io');
-    let mysql = require('mysql');
-
-    const HOST = 'bic4907.diskstation.me'
-    const MYSQLID = 'capstone';
-    const MYSQLPW = 'capstone2020';
-    const DBNAME = 'capstone';
-
-    let conn = mysql.createConnection({
-        host: HOST,
-        user: MYSQLID,
-        password: MYSQLPW,
-        database: DBNAME
-    });    
-
-    let io = socketio.listen(server);
+    let readConn = require('../util/db').readConn;
+    
+    let io = socketio(server);
 
     io.sockets.on('connection', function (socket) {
         let crosswalk; // 요청을 보낸 소켓의 상대적 횡단보도 위치
@@ -29,13 +17,13 @@ module.exports = function (server) {
             intersection = data.in; // 교차로 id
 
             let sql = 'select id from crosswalk where cen_x=? and cen_y=? and intersection_id=?';
-            conn.query(sql, [dir_x, dir_y, intersection], function(error, results) {
+            readConn.query(sql, [dir_x, dir_y, intersection], function(error, results) {
                 if (error) {
                     console.log(error);
                 } else {
                     direction = results[0].id; // DB에 저장되어 있는 운전자가 진입할 횡단보도의 실제 위치 
                     console.log('direction is ' + direction);
-                    conn.query(sql, [cro_x, cro_y, intersection], function (err, result) {
+                    readConn.query(sql, [cro_x, cro_y, intersection], function (err, result) {
                         if (err) {
                             console.log(err);
                         } else {
@@ -59,7 +47,7 @@ module.exports = function (server) {
 
         socket.on('request', function() { // 해당 횡단보도의 객체 요청
             let sql = 'select content from objhistory where crosswalk_id=? and intersection_id=?';
-            conn.query(sql, [crosswalk, intersection], function (error, results) {
+            readConn.query(sql, [crosswalk, intersection], function (error, results) {
                 if (error) {
                     console.log(error);
                 } else {
