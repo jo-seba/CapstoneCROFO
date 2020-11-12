@@ -1,0 +1,7 @@
+version: '3.4'
+
+services:
+  node:
+    build: .
+    ports:
+      - 28080:8080
