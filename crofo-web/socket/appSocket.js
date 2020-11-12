@@ -2,7 +2,7 @@ module.exports = function (server) {
     let socketio = require('socket.io');
     let readConn = require('../util/db').readConn;
     
-    let io = socketio(server);
+    let io = socketio.listen(server);
 
     io.sockets.on('connection', function (socket) {
         let crosswalk; // 요청을 보낸 소켓의 상대적 횡단보도 위치

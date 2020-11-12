@@ -10,6 +10,8 @@ router.post('/cross/find', function (request, response) {
     let lon = data.lon; // 운전자 자동차의 경도
     let arr = []; // 교차로 정보들을 저장할 배열
 
+    console.log(request.body);
+
     let sql = 'select * from intersection';
     readConn.query(sql, function(error, results) {
         if (error) {
